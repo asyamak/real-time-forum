@@ -10,17 +10,9 @@
         "port": "9091"
     },
     "sqlite": {
-        "databaseName":"sqlite",
         "driver": "sqlite3",
         "databaseFileName": "forum.db",
-        "schemePath": "./database/schemes/",
-        "imagesPath": "./database/images/"
-    },
-    "postgres": {
-        "name":"postgres",
-        "driver": "postgres",
-        "databaseURL": "",
-        "schemePath": "./database/schemes/",
+        "schemePath": "./database/schemes/up_tables.sql",
         "imagesPath": "./database/images/"
     }
 }

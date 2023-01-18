@@ -8,10 +8,9 @@ import (
 
 type (
 	Config struct {
-		API      API      `json:"api"`
-		Client   Client   `json:"client"`
-		Sqlite   Sqlite   `json:"sqlite"`
-		Postgres Postgres `json:"postgres"`
+		API    API    `json:"api"`
+		Client Client `json:"client"`
+		Sqlite Sqlite `json:"sqlite"`
 	}
 
 	API struct {
@@ -27,19 +26,10 @@ type (
 	}
 
 	Sqlite struct {
-		Name             string `json:"databaseName"`
 		Driver           string `json:"driver"`
 		DatabaseFileName string `json:"databaseFileName"`
 		SchemePath       string `json:"schemePath"`
 		ImagesPath       string `json:"imagesPath"`
-	}
-
-	Postgres struct {
-		Name         string `json:"databaseName"`
-		Driver       string `json:"driver"`
-		DatabaseName string `json:"databaseURL"`
-		SchemePath   string `json:"schemePath"`
-		ImagesPath   string `json:"imagesPath"`
 	}
 )
 
