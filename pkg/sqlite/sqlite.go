@@ -23,3 +23,25 @@ func ConnectDB(driver, dbName, schemePath string) (*sql.DB, error) {
 
 	return db, nil
 }
+
+func createTables(db *sql.DB, schemePath string) error {
+	schemes, err := readTables(schemePath)
+	if err != nil {
+		return fmt.Errorf("create tables: %w", err)
+	}
+
+	for _, scheme := range schemes {
+		stmt, err := db.Prepare(scheme)
+		if err != nil {
+			return fmt.Errorf("create tables: prepare: %w", err)
+		}
+
+		if _, err := stmt.Exec(); err != nil {
+			return fmt.Errorf("create tables: exec: %w", err)
+		}
+
+		stmt.Close()
+	}
+
+	return nil
+}
