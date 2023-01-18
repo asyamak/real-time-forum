@@ -9,6 +9,6 @@ func main() {
 	configPath := flag.String("config-path", "./configs/config.json", "Path to the config file")
 	flag.Parse()
 
-	app := app.NewApp()
-	app.Start(configPath)
+	app := app.New()
+	app.Start(configPath, "sqlite")
 }

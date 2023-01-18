@@ -8,7 +8,5 @@ CREATE TABLE IF NOT EXISTS user (
     gender TEXT NOT NULL,
     password TEXT NOT NULL,
     posts INT DEFAULT 0,
-    avatar TEXT,
-    token TEXT DEFAULT NULL,
-    token_expiration_time DATETIME DEFAULT NULL
+    avatar TEXT
 );

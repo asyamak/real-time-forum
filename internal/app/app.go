@@ -9,8 +9,8 @@ import (
 	"real-time-forum/internal/repository"
 	"real-time-forum/internal/server"
 	"real-time-forum/internal/service"
+	"real-time-forum/pkg/database"
 	"real-time-forum/pkg/logger"
-	"real-time-forum/pkg/sqlite"
 	"syscall"
 )
 
@@ -18,13 +18,13 @@ type App struct {
 	log *logger.Logger
 }
 
-func NewApp() *App {
+func New() *App {
 	return &App{
 		log: logger.NewLogger("[Forum]"),
 	}
 }
 
-func (a *App) Start(configPath *string) {
+func (a *App) Start(configPath *string, databaseName string) {
 	cfg, err := config.NewConfig(*configPath)
 	if err != nil {
 		a.log.Error(err.Error())
@@ -32,13 +32,9 @@ func (a *App) Start(configPath *string) {
 
 	a.log.Info("Configs initialized")
 
-	db, err := sqlite.ConnectDB(
-		cfg.Database.Driver,
-		cfg.Database.DatabaseName,
-		cfg.Database.SchemePath,
-	)
+	db, err := database.New(databaseName).ConnectDatabase(cfg)
 	if err != nil {
-		a.log.Error(err.Error())
+		a.log.Error("error while connecting database: %s", err.Error())
 	}
 
 	a.log.Info("Database connected")

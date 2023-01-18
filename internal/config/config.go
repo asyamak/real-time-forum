@@ -10,7 +10,8 @@ type (
 	Config struct {
 		API      API      `json:"api"`
 		Client   Client   `json:"client"`
-		Database Database `json:"database"`
+		Sqlite   Sqlite   `json:"sqlite"`
+		Postgres Postgres `json:"postgres"`
 	}
 
 	API struct {
@@ -25,9 +26,18 @@ type (
 		Port string `json:"port"`
 	}
 
-	Database struct {
+	Sqlite struct {
+		Name             string `json:"databaseName"`
+		Driver           string `json:"driver"`
+		DatabaseFileName string `json:"databaseFileName"`
+		SchemePath       string `json:"schemePath"`
+		ImagesPath       string `json:"imagesPath"`
+	}
+
+	Postgres struct {
+		Name         string `json:"databaseName"`
 		Driver       string `json:"driver"`
-		DatabaseName string `json:"databaseName"`
+		DatabaseName string `json:"databaseURL"`
 		SchemePath   string `json:"schemePath"`
 		ImagesPath   string `json:"imagesPath"`
 	}
