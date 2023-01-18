@@ -1,12 +1,12 @@
 CREATE TABLE IF NOT EXISTS user (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
-    email TEXT UNIQUE NOT NULL,
-    username TEXT UNIQUE NOT NULL,
-    first_name TEXT NOT NULL,
-    last_name TEXT NOT NULL,
+    email VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
     age INTEGER NOT NULL,
-    gender TEXT NOT NULL,
+    gender VARCHAR(10) NOT NULL,
     password TEXT NOT NULL,
-    posts INT DEFAULT 0,
-    avatar TEXT
+    avatar TEXT,
+    registered DATETIME NOT NULL
 );
