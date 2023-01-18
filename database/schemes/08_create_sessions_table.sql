@@ -1,7 +1,0 @@
-CREATE TABLE IF NOT EXISTS sessions (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id INTEGER NOT NULL,
-    token TEXT DEFAULT NULL,
-    token_expiration_time DATETIME DEFAULT NULL,
-    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
-);

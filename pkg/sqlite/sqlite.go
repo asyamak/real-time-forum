@@ -21,9 +21,15 @@ func ConnectDatabase(cfg *config.Config) (*sql.DB, error) {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
 
-	if err := createTables(db, cfg.Sqlite.SchemePath); err != nil {
+	data, _ := os.ReadFile("./database/schemes/up_tables.sql")
+
+	if _, err := db.Exec(string(data)); err != nil {
 		return nil, fmt.Errorf("connect db: %w", err)
 	}
+
+	// if err := createTables(db, cfg.Sqlite.SchemePath); err != nil {
+	// 	return nil, fmt.Errorf("connect db: %w", err)
+	// }
 
 	return db, nil
 }

@@ -1,0 +1,88 @@
+CREATE TABLE IF NOT EXISTS user (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    email VARCHAR(50) UNIQUE NOT NULL,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    first_name VARCHAR(50) NOT NULL,
+    last_name VARCHAR(50) NOT NULL,
+    age INTEGER NOT NULL,
+    gender VARCHAR(10) NOT NULL,
+    password TEXT NOT NULL,
+    avatar TEXT,
+    registered DATETIME NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS post (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    title TEXT NOT NULL,
+    content TEXT NOT NULL,
+    creation_time DATETIME NOT NULL,
+    image TEXT,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS comment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    author TEXT NOT NULL,
+    content TEXT NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    category TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS vote_post (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER DEFAULT NULL,
+    post_id INTEGER DEFAULT NULL,
+    vote INTEGER DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS vote_comment (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER DEFAULT NULL,
+    comment_id INTEGER DEFAULT NULL,
+    vote INTEGER DEFAULT 0,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
+    FOREIGN KEY (comment_id) REFERENCES comment(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_images (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    image TEXT NOT NULL,
+    FOREIGN KEY (post_id) REFERENCES post(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS sessions (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER NOT NULL,
+    token TEXT DEFAULT NULL,
+    token_expiration_time DATETIME DEFAULT NULL,
+    FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS post_categories (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    post_id INTEGER NOT NULL,
+    category_id INTEGER NOT NULL,
+    FOREIGN KEY(post_id) REFERENCES posts(id) ON DELETE CASCADE,
+    FOREIGN KEY(category_id) REFERENCES categories(id) ON DELETE CASCADE
+);
+
+INSERT INTO
+    categories (category)
+VALUES
+    ("All"),
+    ("Music"),
+    ("Games"),
+    ("Movies"),
+    ("Series"),
+    ("Books"),
+    ("IT, Programming"),
+    ("Other");
