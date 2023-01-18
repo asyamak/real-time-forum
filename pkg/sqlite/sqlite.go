@@ -3,6 +3,7 @@ package sqlite
 import (
 	"database/sql"
 	"fmt"
+	"os"
 )
 
 func ConnectDB(driver, dbName, schemePath string) (*sql.DB, error) {
@@ -25,7 +26,7 @@ func ConnectDB(driver, dbName, schemePath string) (*sql.DB, error) {
 }
 
 func createTables(db *sql.DB, schemePath string) error {
-	schemes, err := readTables(schemePath)
+	schemes, err := readSchemes(schemePath)
 	if err != nil {
 		return fmt.Errorf("create tables: %w", err)
 	}
@@ -44,4 +45,26 @@ func createTables(db *sql.DB, schemePath string) error {
 	}
 
 	return nil
+}
+
+func readSchemes(schemePath string) ([]string, error) {
+	var schemes []string
+
+	files, err := os.ReadDir(schemePath)
+	if err != nil {
+		return nil, fmt.Errorf("read schemes: read dir: %w", err)
+	}
+
+	for _, file := range files {
+		if !file.IsDir() {
+			temp, err := os.ReadFile(schemePath + file.Name())
+			if err != nil {
+				return nil, fmt.Errorf("read schemes: read file: %w", err)
+			}
+
+			schemes = append(schemes, string(temp))
+		}
+	}
+
+	return schemes, nil
 }
