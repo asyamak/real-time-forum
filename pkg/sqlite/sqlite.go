@@ -4,6 +4,8 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+
+	_ "github.com/mattn/go-sqlite3"
 )
 
 func ConnectDB(driver, dbName, schemePath string) (*sql.DB, error) {
