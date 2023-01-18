@@ -9,8 +9,8 @@ import (
 	"real-time-forum/internal/repository"
 	"real-time-forum/internal/server"
 	"real-time-forum/internal/service"
-	"real-time-forum/pkg/database"
 	"real-time-forum/pkg/logger"
+	"real-time-forum/pkg/sqlite"
 	"syscall"
 )
 
@@ -32,7 +32,7 @@ func (a *App) Start(configPath *string, databaseName string) {
 
 	a.log.Info("Configs initialized")
 
-	db, err := database.New(databaseName).ConnectDatabase(cfg)
+	db, err := sqlite.ConnectDatabase(cfg)
 	if err != nil {
 		a.log.Error("error while connecting database: %s", err.Error())
 	}

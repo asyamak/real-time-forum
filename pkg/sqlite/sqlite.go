@@ -9,32 +9,23 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-type Sqlite struct {
-	db *sql.DB
-}
-
-func NewSqlite() *Sqlite {
-	return &Sqlite{}
-}
-
-func (s *Sqlite) ConnectDatabase(cfg *config.Config) (*sql.DB, error) {
+func ConnectDatabase(cfg *config.Config) (*sql.DB, error) {
 	enableForeignKeys := "?_foreign_keys=on&cache=shared&mode=rwc"
 
-	var err error
-	s.db, err = sql.Open(cfg.Sqlite.Driver, cfg.Sqlite.DatabaseFileName+enableForeignKeys)
+	db, err := sql.Open(cfg.Sqlite.Driver, cfg.Sqlite.DatabaseFileName+enableForeignKeys)
 	if err != nil {
 		return nil, fmt.Errorf("open database: %w", err)
 	}
 
-	if err := s.db.Ping(); err != nil {
+	if err := db.Ping(); err != nil {
 		return nil, fmt.Errorf("ping database: %w", err)
 	}
 
-	if err := createTables(s.db, cfg.Sqlite.SchemePath); err != nil {
+	if err := createTables(db, cfg.Sqlite.SchemePath); err != nil {
 		return nil, fmt.Errorf("connect db: %w", err)
 	}
 
-	return s.db, nil
+	return db, nil
 }
 
 func createTables(db *sql.DB, schemePath string) error {
