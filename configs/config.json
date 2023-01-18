@@ -1,0 +1,18 @@
+{
+    "api": {
+        "host": "localhost",
+        "port": ":9090",
+        "readTimeout": 10,
+        "writeTimeout": 10,
+        "maxHeaderBytes": 1
+    },
+    "client": {
+        "port": "9091"
+    },
+    "database": {
+        "driver": "sqlite3",
+        "databaseName": "forum.db",
+        "schemePath": "./database/schemes/",
+        "imagesPath": "./database/images/"
+    }
+}
