@@ -53,7 +53,7 @@ func (a *App) Start(configPath *string, databaseName string) {
 
 	a.log.Info("Real-Time-Forum app started")
 
-	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
+	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT, os.Interrupt)
 
 	select {
 	case signal := <-quit:
