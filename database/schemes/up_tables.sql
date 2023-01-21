@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS user (
     gender VARCHAR(10) NOT NULL,
     password TEXT NOT NULL,
     avatar TEXT,
-    registered DATETIME NOT NULL
+    creation_time DATETIME NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS post (
