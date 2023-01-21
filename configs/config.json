@@ -4,7 +4,8 @@
         "port": ":9090",
         "readTimeout": 10,
         "writeTimeout": 10,
-        "maxHeaderBytes": 1
+        "maxHeaderBytes": 1,
+        "ctxTimeout": 5
     },
     "client": {
         "port": "9091"
