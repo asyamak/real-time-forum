@@ -3,6 +3,7 @@ package repository
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"real-time-forum/internal/model"
 )
 
@@ -27,7 +28,35 @@ func NewUser(db *sql.DB) *UserRepository {
 }
 
 func (r *UserRepository) Create(ctx context.Context, user model.User) error {
-	panic("not implemented") // TODO: Implement
+	stmt, err := r.db.PrepareContext(ctx, `
+	INSERT INTO 
+		user
+			(email, username, password, first_name, last_name, age, gender, avatar, creation_time)
+	VALUES
+		($1, $2, $3, $4, $5, $6, $7, $8, $9);`)
+	if err != nil {
+		return fmt.Errorf("repo: create user: %w", err)
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.Exec(
+		user.Email,
+		user.Username,
+		user.Password,
+		user.FirstName,
+		user.LastName,
+		user.Age,
+		user.Gender,
+		user.Avatar,
+		user.CreationTime,
+	)
+
+	if isAlreadyExists(err) {
+		return ErrUserExists
+	}
+
+	return nil
 }
 
 func (r *UserRepository) GetByCredentials(ctx context.Context, usernameOrEmail string, password string) (model.User, error) {
