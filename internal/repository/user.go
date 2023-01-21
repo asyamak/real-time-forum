@@ -1,6 +1,9 @@
 package repository
 
-import "real-time-forum/internal/model"
+import (
+	"database/sql"
+	"real-time-forum/internal/model"
+)
 
 type User interface {
 	Create(user model.User) error
@@ -10,4 +13,14 @@ type User interface {
 	GetUsersRatedPosts(userID int) ([]model.Post, error)
 	SetSession(session model.Session) error
 	DeleteSession(userID int, refreshToken string) error
+}
+
+type UserRepository struct {
+	db *sql.DB
+}
+
+func NewUser(db *sql.DB) *UserRepository {
+	return &UserRepository{
+		db: db,
+	}
 }
