@@ -3,6 +3,8 @@ package app
 import (
 	"os"
 	"os/signal"
+	"syscall"
+
 	"real-time-forum/internal/config"
 	handler "real-time-forum/internal/handler/http"
 	"real-time-forum/internal/repository"
@@ -10,7 +12,6 @@ import (
 	"real-time-forum/internal/service"
 	"real-time-forum/pkg/logger"
 	"real-time-forum/pkg/sqlite"
-	"syscall"
 )
 
 type App struct {
