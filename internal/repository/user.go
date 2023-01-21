@@ -60,7 +60,24 @@ func (r *UserRepository) Create(ctx context.Context, user model.User) error {
 }
 
 func (r *UserRepository) GetByCredentials(ctx context.Context, usernameOrEmail string, password string) (model.User, error) {
-	panic("not implemented") // TODO: Implement
+	var user model.User
+
+	err := r.db.QueryRowContext(ctx, `
+		SELECT 
+			id
+		FROM 
+			users
+		WHERE 
+			(username = $1 OR email = $1)
+		AND
+			(password = $2);
+		`, usernameOrEmail, password).Scan(&user.ID)
+
+	if isNoRowsError(err) {
+		return model.User{}, ErrNoRows
+	}
+
+	return user, nil
 }
 
 func (r *UserRepository) GetByID(ctx context.Context, userID int) (model.User, error) {
