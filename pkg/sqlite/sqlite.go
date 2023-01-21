@@ -34,16 +34,9 @@ func createTables(db *sql.DB, schemePath string) error {
 		return fmt.Errorf("read file: %w", err)
 	}
 
-	stmt, err := db.Prepare(string(data))
-	if err != nil {
-		return fmt.Errorf("prepare: %w", err)
-	}
-
-	if _, err := stmt.Exec(); err != nil {
+	if _, err := db.Exec(string(data)); err != nil {
 		return fmt.Errorf("exec: %w", err)
 	}
-
-	defer stmt.Close()
 
 	return nil
 }
