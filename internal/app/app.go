@@ -1,7 +1,6 @@
 package app
 
 import (
-	"context"
 	"os"
 	"os/signal"
 	"real-time-forum/internal/config"
@@ -45,19 +44,23 @@ func (a *App) Start(configPath *string, databaseName string) {
 
 	server := server.NewServer(cfg, handler.InitRoutes())
 
-	a.log.Info("Starting server at port %v -> http://localhost%v", cfg.API.Port, cfg.API.Port)
+	quit := make(chan os.Signal, 1)
 
 	go func() {
-		if err := server.Start(); err != nil {
-			a.log.Info(err.Error())
-		}
+		a.log.Info("Starting server at port %v -> http://localhost%v", cfg.API.Port, cfg.API.Port)
+		server.Start()
 	}()
 
 	a.log.Info("Real-Time-Forum app started")
 
-	quit := make(chan os.Signal, 1)
 	signal.Notify(quit, syscall.SIGTERM, syscall.SIGINT)
-	<-quit
+
+	select {
+	case signal := <-quit:
+		a.log.Info("signal accepted: %v", signal)
+	case err := <-server.ServerErrNotify():
+		a.log.Info("server closing: %v", err)
+	}
 
 	a.log.Info("Real-Time-Forum app shutting down...")
 
@@ -67,7 +70,7 @@ func (a *App) Start(configPath *string, databaseName string) {
 
 	a.log.Info("Database closed")
 
-	if err := server.Shutdown(context.Background()); err != nil {
+	if err := server.Shutdown(); err != nil {
 		a.log.Error(err.Error())
 	}
 

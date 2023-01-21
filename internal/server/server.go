@@ -10,7 +10,9 @@ import (
 )
 
 type Server struct {
-	server *http.Server
+	server            *http.Server
+	shutdownTimeout   time.Duration
+	ServerErrorNotify chan error
 }
 
 func NewServer(cfg *config.Config, router *gorr.Router) *Server {
@@ -22,13 +24,22 @@ func NewServer(cfg *config.Config, router *gorr.Router) *Server {
 			ReadTimeout:    time.Duration(cfg.API.ReadTimeout) * time.Second,
 			WriteTimeout:   time.Duration(cfg.API.WriteTimeout) * time.Second,
 		},
+		shutdownTimeout:   time.Duration(cfg.API.ShutdownTimeout) * time.Second,
+		ServerErrorNotify: make(chan error, 1),
 	}
 }
 
-func (s *Server) Start() error {
-	return s.server.ListenAndServe()
+func (s *Server) Start() {
+	s.ServerErrorNotify <- s.server.ListenAndServe()
 }
 
-func (s *Server) Shutdown(ctx context.Context) error {
+func (s *Server) ServerErrNotify() <-chan error {
+	return s.ServerErrorNotify
+}
+
+func (s *Server) Shutdown() error {
+	ctx, cancel := context.WithTimeout(context.Background(), s.shutdownTimeout)
+	defer cancel()
+
 	return s.server.Shutdown(ctx)
 }
