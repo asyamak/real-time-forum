@@ -29,18 +29,19 @@ func NewUser(db *sql.DB) *UserRepository {
 
 func (r *UserRepository) Create(ctx context.Context, user model.User) error {
 	stmt, err := r.db.PrepareContext(ctx, `
-	INSERT INTO 
-		user
-			(email, username, password, first_name, last_name, age, gender, avatar, creation_time)
-	VALUES
-		($1, $2, $3, $4, $5, $6, $7, $8, $9);`)
+		INSERT INTO 
+			user
+				(email, username, password, first_name, last_name, age, gender, avatar, creation_time)
+		VALUES
+			($1, $2, $3, $4, $5, $6, $7, $8, $9);`)
 	if err != nil {
 		return fmt.Errorf("repo: create user: %w", err)
 	}
 
 	defer stmt.Close()
 
-	_, err = stmt.Exec(
+	_, err = stmt.ExecContext(
+		ctx,
 		user.Email,
 		user.Username,
 		user.Password,
@@ -56,32 +57,82 @@ func (r *UserRepository) Create(ctx context.Context, user model.User) error {
 		return ErrUserExists
 	}
 
-	return nil
+	return err
 }
 
 func (r *UserRepository) GetByCredentials(ctx context.Context, usernameOrEmail string, password string) (model.User, error) {
 	var user model.User
 
-	err := r.db.QueryRowContext(ctx, `
+	stmt, err := r.db.PrepareContext(ctx, `
 		SELECT 
-			id
+			id, email, username, password, first_name, last_name, age, gender, avatar, creation_time
 		FROM 
-			users
+			user
 		WHERE 
 			(username = $1 OR email = $1)
 		AND
-			(password = $2);
-		`, usernameOrEmail, password).Scan(&user.ID)
+			(password = $2);`)
+	if err != nil {
+		return model.User{}, err
+	}
+	defer stmt.Close()
+
+	row := stmt.QueryRowContext(ctx, usernameOrEmail, password)
+	err = row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.FirstName,
+		&user.LastName,
+		&user.Age,
+		&user.Gender,
+		&user.Avatar,
+		&user.CreationTime,
+	)
 
 	if isNoRowsError(err) {
 		return model.User{}, ErrNoRows
 	}
 
-	return user, nil
+	return user, err
 }
 
 func (r *UserRepository) GetByID(ctx context.Context, userID int) (model.User, error) {
-	panic("not implemented") // TODO: Implement
+	var user model.User
+
+	stmt, err := r.db.PrepareContext(ctx, `
+	SELECT
+		id, email, username, password, first_name, last_name, age, gender, avatar, creation_time
+	FROM
+		user
+	WHERE
+		id = $1`)
+	if err != nil {
+		return model.User{}, err
+	}
+
+	defer stmt.Close()
+
+	row := stmt.QueryRowContext(ctx, userID)
+	err = row.Scan(
+		&user.ID,
+		&user.Email,
+		&user.Username,
+		&user.Password,
+		&user.FirstName,
+		&user.LastName,
+		&user.Age,
+		&user.Gender,
+		&user.Avatar,
+		&user.CreationTime,
+	)
+
+	if isNoRowsError(err) {
+		return model.User{}, ErrNoRows
+	}
+
+	return model.User{}, err
 }
 
 func (r *UserRepository) GetUsersPosts(ctx context.Context, userID int) ([]model.Post, error) {
