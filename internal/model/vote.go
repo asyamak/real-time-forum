@@ -8,4 +8,8 @@ type PostVotes struct {
 }
 
 type CommentVotes struct {
+	ID        int
+	UserID    int
+	CommentID int
+	Vote      int
 }
