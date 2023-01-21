@@ -14,11 +14,12 @@ type (
 	}
 
 	API struct {
-		Host           string `json:"host"`
-		Port           string `json:"port"`
-		ReadTimeout    int    `json:"readTimeout"`
-		WriteTimeout   int    `json:"writeTimeout"`
-		MaxHeaderBytes int    `json:"maxHeaderBytes"`
+		Host            string `json:"host"`
+		Port            string `json:"port"`
+		ReadTimeout     int    `json:"readTimeout"`
+		WriteTimeout    int    `json:"writeTimeout"`
+		MaxHeaderBytes  int    `json:"maxHeaderBytes"`
+		ShutdownTimeout int    `json:"ctxTimeout"`
 	}
 
 	Client struct {
