@@ -286,6 +286,12 @@ func (r *UserRepository) GetUsersVotedPosts(ctx context.Context, userID int) ([]
 			)
 			ORDER BY post.id DESC;
 		`)
+	if err != nil {
+		if err = tx.Rollback(); err != nil {
+			return nil, fmt.Errorf("repo: get users posts: rollback: %w", err)
+		}
+		return nil, fmt.Errorf("repo: get users voted posts: prepare %w", err)
+	}
 
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
