@@ -40,3 +40,36 @@ func (h *Handler) SignUp(c *gorr.Context) {
 
 	c.WriteHeader(http.StatusCreated)
 }
+
+type usersSignInInput struct {
+	UsernameOrEmail string `json:"usernameOrEmail"`
+	Password        string `json:"password"`
+}
+
+type tokenResponse struct {
+	Token string `json:"token"`
+}
+
+func (h *Handler) SignIn(c *gorr.Context) {
+	var input usersSignInInput
+
+	if err := c.ReadBody(&input); err != nil {
+		c.WriteError(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	token, err := h.service.User.SignIn(c.Context(), service.UserSignInInput{
+		UsernameOrEmail: input.UsernameOrEmail,
+		Password:        input.Password,
+	})
+	if err != nil {
+		c.WriteError(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	resp := tokenResponse{
+		Token: token,
+	}
+
+	c.WriteJSON(http.StatusOK, resp)
+}

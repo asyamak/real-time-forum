@@ -2,6 +2,7 @@ package sqlite
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"real-time-forum/internal/config"
@@ -28,6 +29,8 @@ func ConnectDatabase(cfg *config.Config) (*sql.DB, error) {
 	return db, nil
 }
 
+var Errorka = errors.New("UNIQUE constraint failed: categories.category")
+
 func createTables(db *sql.DB, schemePath string) error {
 	data, err := os.ReadFile(schemePath)
 	if err != nil {
@@ -35,7 +38,9 @@ func createTables(db *sql.DB, schemePath string) error {
 	}
 
 	if _, err := db.Exec(string(data)); err != nil {
-		return fmt.Errorf("exec: %w", err)
+		if errors.Is(err, Errorka) {
+			return fmt.Errorf("exec: %w", err)
+		}
 	}
 
 	return nil

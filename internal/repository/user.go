@@ -10,6 +10,7 @@ import (
 
 type User interface {
 	Create(ctx context.Context, user model.User) error
+	GetByEmailOrUsername(ctx context.Context, emailOrUsername string) (string, error)
 	GetByCredentials(ctx context.Context, usernameOrEmail, password string) (model.User, error)
 	GetByID(ctx context.Context, userID int) (model.User, error)
 	GetUsersPosts(ctx context.Context, userID int) ([]model.Post, error)
@@ -59,6 +60,29 @@ func (r *UserRepository) Create(ctx context.Context, user model.User) error {
 	}
 
 	return err
+}
+
+func (r *UserRepository) GetByEmailOrUsername(ctx context.Context, emailOrUsername string) (string, error) {
+	var password string
+
+	stmt, err := r.db.PrepareContext(ctx, `
+		SELECT 
+			password
+		FROM
+			user
+		WHERE
+			(username = $1 OR email = $1);`)
+	if err != nil {
+		return "", err
+	}
+
+	defer stmt.Close()
+
+	if err := stmt.QueryRowContext(ctx, emailOrUsername).Scan(&password); err != nil {
+		return "", err
+	}
+
+	return password, nil
 }
 
 func (r *UserRepository) GetByCredentials(ctx context.Context, usernameOrEmail string, password string) (model.User, error) {

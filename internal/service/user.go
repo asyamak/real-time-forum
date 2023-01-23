@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"crypto/sha256"
 	"fmt"
 	"real-time-forum/internal/model"
 	"real-time-forum/internal/repository"
@@ -9,7 +10,6 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type User interface {
@@ -53,10 +53,9 @@ func (s *UserService) SignUp(ctx context.Context, input UserSignUpInput) error {
 		return fmt.Errorf("unknown gender")
 	}
 
-	password, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return err
-	}
+	hash := sha256.New()
+	hash.Write([]byte(input.Password))
+	input.Password = fmt.Sprintf("%x", hash.Sum([]byte("aboba")))
 
 	user := model.User{
 		Username:     input.Username,
@@ -65,7 +64,7 @@ func (s *UserService) SignUp(ctx context.Context, input UserSignUpInput) error {
 		Age:          input.Age,
 		Gender:       input.Gender,
 		Email:        strings.ToLower(input.Email),
-		Password:     string(password),
+		Password:     input.Password,
 		CreationTime: time.Now(),
 		Avatar:       avatar,
 	}
@@ -83,14 +82,18 @@ type UserSignInInput struct {
 }
 
 func (s *UserService) SignIn(ctx context.Context, input UserSignInInput) (string, error) {
+	hash := sha256.New()
+	hash.Write([]byte(input.Password))
+	input.Password = fmt.Sprintf("%x", hash.Sum([]byte("aboba")))
+
 	user, err := s.repo.GetByCredentials(ctx, input.UsernameOrEmail, input.Password)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("get by credentials: %w", err)
 	}
 
 	tokenUUID, err := uuid.NewV4()
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("generate token: %w", err)
 	}
 
 	session := model.Session{
@@ -100,7 +103,7 @@ func (s *UserService) SignIn(ctx context.Context, input UserSignInInput) (string
 	}
 
 	if err := s.repo.SetSession(ctx, session); err != nil {
-		return "", err
+		return "", fmt.Errorf("set session: %w", err)
 	}
 
 	return session.Token, nil
