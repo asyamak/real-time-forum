@@ -142,64 +142,65 @@ func (r *UserRepository) GetUsersPosts(ctx context.Context, userID int) ([]model
 
 	tx, err := r.db.Begin()
 	if err != nil {
-		return nil, fmt.Errorf("get users posts: transaction: begin: %w", err)
+		return nil, fmt.Errorf("repo: get users posts: transaction: begin: %w", err)
 	}
 
 	stmt, err := tx.PrepareContext(ctx, `SELECT EXISTS (SELECT id FROM user WHERE id = $1);`)
 	if err != nil {
 		if err = tx.Rollback(); err != nil {
-			return nil, fmt.Errorf("get users posts: rollback: %w", err)
+			return nil, fmt.Errorf("repo: get users posts: rollback: %w", err)
 		}
-		return nil, fmt.Errorf("get users posts: prepare statement 1: %w", err)
+		return nil, fmt.Errorf("repo: get users posts: prepare statement 1: %w", err)
 	}
+
 	defer stmt.Close()
 
-	row := stmt.QueryRowContext(ctx, userID)
-
-	row.Scan(&isUserExists)
-	if err != nil {
-		return nil, fmt.Errorf("get users posts: row scan: %w", err)
+	if err := stmt.QueryRowContext(ctx, userID).Scan(&isUserExists); err != nil {
+		return nil, fmt.Errorf("repo: get users posts: row scan: %w", err)
 	}
 
 	if !isUserExists {
-		return nil, fmt.Errorf("get user posts: user is not exists")
+		return nil, ErrUserExists
 	}
 
 	var posts []model.Post
 
 	stmt, err = tx.PrepareContext(ctx, `
-	SELECT 
-		p.id, 
-		p.title, 
-		p.content, 
-		p.creation_time, 
-		p.image, 
-		u.id AS author.id,
-		u.username AS author.username, 
-		u.first_name AS author.first_name, 
-		u.last_name AS author.last_name, 
-		u.avatar AS author.avatar
-	FROM post p LEFT JOIN user u ON p.user_id = u.id
-	WHERE post.user_id = $1
-	ORDER BY 1 DESC;`)
-
+		SELECT 
+			post.id, 
+			post.title, 
+			post.content, 
+			post.creation_time, 
+			post.image, 
+			user.id AS author_id,
+			user.username AS author_username, 
+			user.first_name AS author_first_name, 
+			user.last_name AS author_last_name, 
+			user.avatar AS author_avatar
+		FROM 
+			post LEFT JOIN user ON post.user_id = user.id
+		WHERE 
+			post.user_id = $1
+		ORDER BY 1 DESC;`)
 	if err != nil {
 		if err = tx.Rollback(); err != nil {
-			return nil, fmt.Errorf("get users posts: rollback: %w", err)
+			return nil, fmt.Errorf("repo: get users posts: rollback: %w", err)
 		}
-		return nil, fmt.Errorf("get users posts: prepare statement 2: %w", err)
+		return nil, fmt.Errorf("repo: get users posts: prepare statement 2: %w", err)
 	}
+
 	defer stmt.Close()
 
 	rows, err := stmt.QueryContext(ctx, userID)
 	if err != nil {
 		return nil, fmt.Errorf("get users posts: exec statemnt: %w", err)
 	}
+
 	defer rows.Close()
 
 	for rows.Next() {
 		var post model.Post
-		err = rows.Scan(
+		err := rows.Scan(
 			&post.ID,
 			&post.Title,
 			&post.Content,
@@ -217,59 +218,111 @@ func (r *UserRepository) GetUsersPosts(ctx context.Context, userID int) ([]model
 
 		posts = append(posts, post)
 	}
-	err = tx.Commit()
-	if err != nil {
-		return nil, fmt.Errorf("get users posts: transaction: commit %w", err)
+
+	if err = tx.Commit(); err != nil {
+		return nil, fmt.Errorf("repo: get users posts: transaction: commit %w", err)
 	}
 
 	return posts, nil
 }
 
-// func (r *UserRepository) GetUsersVotedPosts(ctx context.Context, userID int) ([]model.Post, error) {
-// 	var isUserExists bool
+func (r *UserRepository) GetUsersVotedPosts(ctx context.Context, userID int) ([]model.Post, error) {
+	var isUserExists bool
 
-// 	tx, err := r.db.Begin()
-// 	if err != nil {
-// 		return nil, fmt.Errorf("get users voted posts: transaction: begin: %w", err)
-// 	}
+	tx, err := r.db.Begin()
+	if err != nil {
+		return nil, fmt.Errorf("repo: get users voted posts: transaction: begin: %w", err)
+	}
 
-// 	stmt, err := tx.PrepareContext(ctx, `SELECT EXISTS (SELECT id FROM user WHERE id = $1);`)
-// 	if err != nil {
-// 		if err = tx.Rollback(); err != nil {
-// 			return nil, fmt.Errorf("get users posts: rollback: %w", err)
-// 		}
-// 		return nil, fmt.Errorf("get users voted posts: prepare statement 1: %w", err)
-// 	}
-// 	defer stmt.Close()
+	stmt, err := tx.PrepareContext(ctx, `SELECT EXISTS (SELECT id FROM user WHERE id = $1);`)
+	if err != nil {
+		if err = tx.Rollback(); err != nil {
+			return nil, fmt.Errorf("repo: get users posts: rollback: %w", err)
+		}
+		return nil, fmt.Errorf("repo: get users voted posts: prepare statement 1: %w", err)
+	}
 
-// 	row := stmt.QueryRowContext(ctx, userID)
+	defer stmt.Close()
 
-// 	row.Scan(&isUserExists)
-// 	if err != nil {
-// 		return nil, fmt.Errorf("get users voted posts: row scan: %w", err)
-// 	}
+	if err := stmt.QueryRowContext(ctx, userID).Scan(&isUserExists); err != nil {
+		if err = tx.Rollback(); err != nil {
+			return nil, fmt.Errorf("repo: get users posts: rollback: %w", err)
+		}
+		return nil, fmt.Errorf("repo: get users voted posts: row scan: %w", err)
+	}
 
-// 	if !isUserExists {
-// 		return nil, fmt.Errorf("user is not exists")
-// 	}
+	if !isUserExists {
+		if err = tx.Rollback(); err != nil {
+			return nil, fmt.Errorf("repo: get users posts: rollback: %w", err)
+		}
+		return nil, ErrUserExists
+	}
 
-// 	var posts []model.Post
+	var posts []model.Post
 
-// 	stmt, err = tx.PrepareContext(ctx, `
-// 	SELECT
-// 		p.id,
-// 		p.user_id AS author.id,
-// 		u.first_name AS author.first_name,
-// 		u.last_name AS author.last_name,
-// 		p.title,
-// 		p.creation_time
-// 	FROM
-// 		post p
-// 		LEFT JOIN user u ON p.user_id = u.id
-// 		LEFT JOIN vote_post
+	stmt, err = tx.PrepareContext(ctx, `
+		SELECT
+			post.id,
+			post.user_id AS author_id,
+			user.first_name AS author_first_name,
+			user.last_name AS author_last_name,
+			post.title,
+			post.creation_time,
+			vote_post.vote AS user_vote
+		FROM
+			post
+		LEFT JOIN 
+			user ON post.user_id = user.id
+		LEFT JOIN 
+			vote_post ON post.id = vote_post.post_id AND vote_post.user_id = $1
+		WHERE
+			post.id IN (
+				SELECT
+					post_id
+				FROM
+					vote_post
+				WHERE
+					user_id = $1
+			)
+			ORDER BY post.id DESC;
+		`)
 
-// 		`)
-// }
+	rows, err := stmt.QueryContext(ctx, userID)
+	if err != nil {
+		if err = tx.Rollback(); err != nil {
+			return nil, fmt.Errorf("repo: get users posts: rollback: %w", err)
+		}
+		return nil, fmt.Errorf("repo: get users voted posts: query %w", err)
+	}
+
+	for rows.Next() {
+		var post model.Post
+
+		err := rows.Scan(
+			&post.ID,
+			&post.Author.ID,
+			&post.Author.FirstName,
+			&post.Author.LastName,
+			&post.Title,
+			&post.CreationTime,
+			&post.Rating,
+		)
+		if err != nil {
+			if err = tx.Rollback(); err != nil {
+				return nil, fmt.Errorf("repo: get users posts: rollback: %w", err)
+			}
+			return nil, fmt.Errorf("repo: get users voted posts: scan %w", err)
+		}
+
+		posts = append(posts, post)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return nil, fmt.Errorf("repo: get users voted posts: commit %w", err)
+	}
+
+	return posts, nil
+}
 
 func (r *UserRepository) SetSession(ctx context.Context, session model.Session) error {
 	panic("not implemented") // TODO: Implement
