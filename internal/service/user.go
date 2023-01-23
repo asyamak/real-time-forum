@@ -2,8 +2,13 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"real-time-forum/internal/model"
 	"real-time-forum/internal/repository"
+	"strings"
+	"time"
+
+	"golang.org/x/crypto/bcrypt"
 )
 
 type User interface {
@@ -30,13 +35,45 @@ type UserSignUpInput struct {
 	FirstName string
 	LastName  string
 	Age       int
-	Gender    int
+	Gender    string
 	Email     string
 	Password  string
 }
 
 func (s *UserService) SignUp(ctx context.Context, input UserSignUpInput) error {
-	panic("not implemented") // TODO: Implement
+	var avatar string
+
+	switch input.Gender {
+	case "Male":
+		avatar = "./database/images/male_default.jpg"
+	case "Female":
+		avatar = "./database/images/female_default.jpg"
+	default:
+		return fmt.Errorf("unknown gender")
+	}
+
+	password, err := bcrypt.GenerateFromPassword([]byte(input.Password), bcrypt.DefaultCost)
+	if err != nil {
+		return err
+	}
+
+	user := model.User{
+		Username:     input.Username,
+		FirstName:    input.FirstName,
+		LastName:     input.LastName,
+		Age:          input.Age,
+		Gender:       input.Gender,
+		Email:        strings.ToLower(input.Email),
+		Password:     string(password),
+		CreationTime: time.Now(),
+		Avatar:       avatar,
+	}
+
+	if err := s.repo.Create(ctx, user); err != nil {
+		return err
+	}
+
+	return nil
 }
 
 type UserSignInInput struct {
