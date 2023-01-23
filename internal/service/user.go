@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/gofrs/uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -82,7 +83,27 @@ type UserSignInInput struct {
 }
 
 func (s *UserService) SignIn(ctx context.Context, input UserSignInInput) (string, error) {
-	panic("not implemented") // TODO: Implement
+	user, err := s.repo.GetByCredentials(ctx, input.UsernameOrEmail, input.Password)
+	if err != nil {
+		return "", err
+	}
+
+	tokenUUID, err := uuid.NewV4()
+	if err != nil {
+		return "", err
+	}
+
+	session := model.Session{
+		UserID:    user.ID,
+		Token:     tokenUUID.String(),
+		ExpiresAt: time.Now().Add(12 * time.Hour),
+	}
+
+	if err := s.repo.SetSession(ctx, session); err != nil {
+		return "", err
+	}
+
+	return session.Token, nil
 }
 
 func (s *UserService) GetByID(ctx context.Context, userID int) (model.User, error) {
