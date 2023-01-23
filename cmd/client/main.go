@@ -19,7 +19,7 @@ func main() {
 		log.Error(err.Error())
 	}
 
-	indexTemp, err := template.ParseFiles("./web/public/index.html")
+	indexTemp, err := template.ParseFiles("./web/template/index.html")
 	if err != nil {
 		log.Error("%e", err)
 	}

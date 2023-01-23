@@ -19,8 +19,8 @@ func NewHandler(service *service.Service) *Handler {
 func (h *Handler) InitRoutes() *gorr.Router {
 	router := gorr.NewRouter()
 
-	router.POST("/auth/sign-up", h.SignUp)
-	router.POST("/auth/sign-in", h.SignIn)
+	router.POST("/api/user/sign-up", h.SignUp)
+	router.POST("/api/user/sign-in", h.SignIn)
 
 	return router
 }

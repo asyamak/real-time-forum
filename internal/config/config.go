@@ -53,7 +53,7 @@ func (c *Config) ServerAddress() string {
 	host := c.API.Host
 	port := c.API.Port
 	if host == "localhost" || host == "127.0.0.1" {
-		return fmt.Sprintf("%s:%s", host, port)
+		return fmt.Sprintf("%s%s", host, port)
 	}
 	return host
 }

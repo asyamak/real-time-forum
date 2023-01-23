@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS session_token (
 );
 
 INSERT INTO
-    categories (category)
+    category (name)
 VALUES
     ("All"),
     ("Music"),
