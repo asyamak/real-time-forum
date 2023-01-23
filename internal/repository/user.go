@@ -15,7 +15,7 @@ type User interface {
 	GetUsersPosts(ctx context.Context, userID int) ([]model.Post, error)
 	GetUsersVotedPosts(ctx context.Context, userID int) ([]model.Post, error)
 	SetSession(ctx context.Context, session model.Session) error
-	DeleteSession(ctx context.Context, userID int, refreshToken string) error
+	DeleteSession(ctx context.Context, userID int) error
 }
 
 type UserRepository struct {
@@ -350,6 +350,24 @@ func (r *UserRepository) SetSession(ctx context.Context, session model.Session) 
 	return nil
 }
 
-func (r *UserRepository) DeleteSession(ctx context.Context, userID int, refreshToken string) error {
-	panic("not implemented") // TODO: Implement
+func (r *UserRepository) DeleteSession(ctx context.Context, userID int) error {
+	res, err := r.db.Exec(`
+		DELETE FROM 
+			session_tokens
+		WHERE
+			user_id = $1`, userID)
+	if err != nil {
+		return err
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return err
+	}
+
+	return nil
 }
