@@ -331,7 +331,23 @@ func (r *UserRepository) GetUsersVotedPosts(ctx context.Context, userID int) ([]
 }
 
 func (r *UserRepository) SetSession(ctx context.Context, session model.Session) error {
-	panic("not implemented") // TODO: Implement
+	stmt, err := r.db.PrepareContext(ctx, `
+		INSERT INTO
+			session_tokens (user_id, token, token_expiration_time)
+		VALUES
+			($1, $2, $3);`)
+	if err != nil {
+		return fmt.Errorf("repo: set session: %w", err)
+	}
+
+	defer stmt.Close()
+
+	_, err = stmt.ExecContext(ctx, session.UserID, session.Token, session.ExpiresAt)
+	if err != nil {
+		return fmt.Errorf("repo: set session: %w", err)
+	}
+
+	return nil
 }
 
 func (r *UserRepository) DeleteSession(ctx context.Context, userID int, refreshToken string) error {
