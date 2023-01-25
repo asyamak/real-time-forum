@@ -19,6 +19,7 @@ type User interface {
 	GetByID(ctx context.Context, userID int) (model.User, error)
 	GetUsersPosts(ctx context.Context, userID int) ([]model.Post, error)
 	GetUsersVotedPosts(ctx context.Context, userID int) ([]model.Post, error)
+	SetToken(ctx context.Context, userID int) error
 	DeleteToken(ctx context.Context, userID int) error
 }
 
@@ -90,22 +91,7 @@ func (s *UserService) SignIn(ctx context.Context, input UserSignInInput) (string
 		return "", fmt.Errorf("get by credentials: %w", err)
 	}
 
-	tokenUUID, err := uuid.NewV4()
-	if err != nil {
-		return "", fmt.Errorf("generate token: %w", err)
-	}
-
-	session := model.Session{
-		UserID:    user.ID,
-		Token:     tokenUUID.String(),
-		ExpiresAt: time.Now().Add(12 * time.Hour),
-	}
-
-	if err := s.repo.SetSession(ctx, session); err != nil {
-		return "", fmt.Errorf("set session: %w", err)
-	}
-
-	return session.Token, nil
+	return s.SetToken(ctx, user.ID)
 }
 
 var ErrUserDoesNotExists = errors.New("user doesn't exists")
@@ -142,6 +128,21 @@ func (s *UserService) GetUsersVotedPosts(ctx context.Context, userID int) ([]mod
 		return nil, err
 	}
 	return likedPosts, nil
+}
+
+func (s *UserService) SetToken(ctx context.Context, userID int) (string, error) {
+	tokenUUID, err := uuid.NewV4()
+	if err != nil {
+		return "", fmt.Errorf("generate token: %w", err)
+	}
+
+	session := model.Session{
+		UserID:    userID,
+		Token:     tokenUUID.String(),
+		ExpiresAt: time.Now().Add(12 * time.Hour),
+	}
+
+	return session.Token, s.repo.SetSession(ctx, session)
 }
 
 func (s *UserService) DeleteToken(ctx context.Context, userID int) error {
