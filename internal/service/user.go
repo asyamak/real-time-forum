@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"real-time-forum/internal/config"
 	"real-time-forum/internal/model"
 	"real-time-forum/internal/repository"
 	"real-time-forum/pkg/hasher"
@@ -26,12 +27,14 @@ type User interface {
 type UserService struct {
 	repo   repository.User
 	hasher *hasher.HasherService
+	cfg    *config.Config
 }
 
-func NewUser(repo repository.User, hasher *hasher.HasherService) *UserService {
+func NewUser(repo repository.User, hasher *hasher.HasherService, cfg *config.Config) *UserService {
 	return &UserService{
 		repo:   repo,
 		hasher: hasher,
+		cfg:    cfg,
 	}
 }
 
@@ -45,14 +48,19 @@ type UserSignUpInput struct {
 	Password  string
 }
 
+const (
+	femaleAva = "female_default.jpg"
+	maleAva   = "female_default.jpg"
+)
+
 func (s *UserService) SignUp(ctx context.Context, input UserSignUpInput) error {
 	var avatar string
 
 	switch input.Gender {
 	case "Male":
-		avatar = "./database/images/male_default.jpg"
+		avatar = s.cfg.Sqlite.ImagesPath + maleAva
 	case "Female":
-		avatar = "./database/images/female_default.jpg"
+		avatar = s.cfg.Sqlite.ImagesPath + femaleAva
 	default:
 		return fmt.Errorf("unknown gender")
 	}

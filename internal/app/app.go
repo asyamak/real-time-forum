@@ -46,7 +46,7 @@ func (a *App) Start(configPath *string, databaseName string) {
 	}
 
 	repository := repository.NewRepository(db)
-	service := service.NewService(repository, h)
+	service := service.NewService(repository, h, cfg)
 	handler := handler.NewHandler(service)
 
 	server := server.NewServer(cfg, handler.InitRoutes())
