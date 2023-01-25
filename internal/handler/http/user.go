@@ -1,6 +1,7 @@
 package http
 
 import (
+	"errors"
 	"net/http"
 	"real-time-forum/internal/service"
 
@@ -81,9 +82,15 @@ func (h *Handler) GetUser(c *gorr.Context) {
 		return
 	}
 
-	_, err = h.service.User.GetByID(c.Context(), userID)
+	user, err := h.service.User.GetByID(c.Context(), userID)
 	if err != nil {
-		c.WriteError(http.StatusBadRequest, err.Error())
+		if errors.Is(err, service.ErrUserDoesNotExists) {
+			c.WriteError(http.StatusNotFound, err.Error())
+			return
+		}
+		c.WriteError(http.StatusInternalServerError, err.Error())
 		return
 	}
+
+	c.WriteJSON(http.StatusOK, user)
 }
