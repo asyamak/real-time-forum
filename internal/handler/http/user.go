@@ -114,3 +114,23 @@ func (h *Handler) GetUserPosts(c *gorr.Context) {
 
 	c.WriteJSON(http.StatusOK, posts)
 }
+
+func (h *Handler) GetUserVotedPosts(c *gorr.Context) {
+	userID, err := c.GetIntParam("user_id")
+	if err != nil {
+		c.WriteError(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	likedPosts, err := h.service.User.GetUsersVotedPosts(c.Context(), userID)
+	if err != nil {
+		if errors.Is(err, service.ErrUserDoesNotExists) {
+			c.WriteError(http.StatusNotFound, err.Error())
+			return
+		}
+		c.WriteError(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.WriteJSON(http.StatusOK, likedPosts)
+}
