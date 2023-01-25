@@ -123,7 +123,14 @@ func (s *UserService) GetByID(ctx context.Context, userID int) (model.User, erro
 }
 
 func (s *UserService) GetUsersPosts(ctx context.Context, userID int) ([]model.Post, error) {
-	panic("not implemented") // TODO: Implement
+	posts, err := s.repo.GetUsersPosts(ctx, userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNoRows) {
+			return nil, ErrUserDoesNotExists
+		}
+		return nil, err
+	}
+	return posts, nil
 }
 
 func (s *UserService) GetUsersVotedPosts(ctx context.Context, userID int) ([]model.Post, error) {
