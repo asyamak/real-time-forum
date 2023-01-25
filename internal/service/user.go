@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"real-time-forum/internal/model"
 	"real-time-forum/internal/repository"
+	"real-time-forum/pkg/hasher"
 	"strings"
 	"time"
 
@@ -22,12 +23,14 @@ type User interface {
 }
 
 type UserService struct {
-	repo repository.User
+	repo   repository.User
+	hasher *hasher.HasherService
 }
 
-func NewUser(repo repository.User) *UserService {
+func NewUser(repo repository.User, hasher *hasher.HasherService) *UserService {
 	return &UserService{
-		repo: repo,
+		repo:   repo,
+		hasher: hasher,
 	}
 }
 
@@ -53,9 +56,7 @@ func (s *UserService) SignUp(ctx context.Context, input UserSignUpInput) error {
 		return fmt.Errorf("unknown gender")
 	}
 
-	hash := sha256.New()
-	hash.Write([]byte(input.Password))
-	input.Password = fmt.Sprintf("%x", hash.Sum([]byte("aboba")))
+	input.Password = s.hasher.HashPassword(input.Password)
 
 	user := model.User{
 		Username:     input.Username,

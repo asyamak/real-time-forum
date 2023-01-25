@@ -10,6 +10,7 @@ import (
 	"real-time-forum/internal/repository"
 	"real-time-forum/internal/server"
 	"real-time-forum/internal/service"
+	"real-time-forum/pkg/hasher"
 	"real-time-forum/pkg/logger"
 	"real-time-forum/pkg/sqlite"
 )
@@ -39,8 +40,13 @@ func (a *App) Start(configPath *string, databaseName string) {
 
 	a.log.Info("Database connected")
 
+	h, err := hasher.NewHasher("aboba")
+	if err != nil {
+		a.log.Error("error while connecting database: %s", err.Error())
+	}
+
 	repository := repository.NewRepository(db)
-	service := service.NewService(repository)
+	service := service.NewService(repository, h)
 	handler := handler.NewHandler(service)
 
 	server := server.NewServer(cfg, handler.InitRoutes())

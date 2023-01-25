@@ -73,3 +73,17 @@ func (h *Handler) SignIn(c *gorr.Context) {
 
 	c.WriteJSON(http.StatusOK, resp)
 }
+
+func (h *Handler) GetUser(c *gorr.Context) {
+	userID, err := c.GetIntParam("user_id")
+	if err != nil {
+		c.WriteError(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	_, err = h.service.User.GetByID(c.Context(), userID)
+	if err != nil {
+		c.WriteError(http.StatusBadRequest, err.Error())
+		return
+	}
+}
