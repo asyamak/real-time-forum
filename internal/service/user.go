@@ -134,7 +134,14 @@ func (s *UserService) GetUsersPosts(ctx context.Context, userID int) ([]model.Po
 }
 
 func (s *UserService) GetUsersVotedPosts(ctx context.Context, userID int) ([]model.Post, error) {
-	panic("not implemented") // TODO: Implement
+	likedPosts, err := s.repo.GetUsersVotedPosts(ctx, userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNoRows) {
+			return nil, ErrUserDoesNotExists
+		}
+		return nil, err
+	}
+	return likedPosts, nil
 }
 
 func (s *UserService) SetToken(ctx context.Context, userID int) (string, error) {
