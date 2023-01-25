@@ -2,7 +2,7 @@ package service
 
 import (
 	"context"
-	"crypto/sha256"
+	"errors"
 	"fmt"
 	"real-time-forum/internal/model"
 	"real-time-forum/internal/repository"
@@ -83,9 +83,7 @@ type UserSignInInput struct {
 }
 
 func (s *UserService) SignIn(ctx context.Context, input UserSignInInput) (string, error) {
-	hash := sha256.New()
-	hash.Write([]byte(input.Password))
-	input.Password = fmt.Sprintf("%x", hash.Sum([]byte("aboba")))
+	input.Password = s.hasher.HashPassword(input.Password)
 
 	user, err := s.repo.GetByCredentials(ctx, input.UsernameOrEmail, input.Password)
 	if err != nil {
@@ -110,8 +108,18 @@ func (s *UserService) SignIn(ctx context.Context, input UserSignInInput) (string
 	return session.Token, nil
 }
 
+var ErrUserDoesNotExists = errors.New("user doesn't exists")
+
 func (s *UserService) GetByID(ctx context.Context, userID int) (model.User, error) {
-	panic("not implemented") // TODO: Implement
+	user, err := s.repo.GetByID(ctx, userID)
+	if err != nil {
+		if errors.Is(err, repository.ErrNoRows) {
+			return model.User{}, ErrUserDoesNotExists
+		}
+		return model.User{}, err
+	}
+
+	return user, nil
 }
 
 func (s *UserService) GetUsersPosts(ctx context.Context, userID int) ([]model.Post, error) {

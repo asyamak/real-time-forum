@@ -8,6 +8,7 @@ build-client:
 	go build -o cli ./cmd/client/main.go
 
 run-api:
+	rm -rf forum.db
 	go run ./cmd/app/main.go
 
 run-client:
