@@ -94,3 +94,23 @@ func (h *Handler) GetUser(c *gorr.Context) {
 
 	c.WriteJSON(http.StatusOK, user)
 }
+
+func (h *Handler) GetUserPosts(c *gorr.Context) {
+	userID, err := c.GetIntParam("user_id")
+	if err != nil {
+		c.WriteError(http.StatusBadRequest, err.Error())
+		return
+	}
+
+	posts, err := h.service.User.GetUsersPosts(c.Context(), userID)
+	if err != nil {
+		if errors.Is(err, service.ErrUserDoesNotExists) {
+			c.WriteError(http.StatusNotFound, err.Error())
+			return
+		}
+		c.WriteError(http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	c.WriteJSON(http.StatusOK, posts)
+}
