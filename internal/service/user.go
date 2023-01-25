@@ -19,7 +19,7 @@ type User interface {
 	GetByID(ctx context.Context, userID int) (model.User, error)
 	GetUsersPosts(ctx context.Context, userID int) ([]model.Post, error)
 	GetUsersVotedPosts(ctx context.Context, userID int) ([]model.Post, error)
-	SetToken(ctx context.Context, userID int) (string, error)
+	DeleteToken(ctx context.Context, userID int) error
 }
 
 type UserService struct {
@@ -144,6 +144,13 @@ func (s *UserService) GetUsersVotedPosts(ctx context.Context, userID int) ([]mod
 	return likedPosts, nil
 }
 
-func (s *UserService) SetToken(ctx context.Context, userID int) (string, error) {
-	panic("not implemented") // TODO: Implement
+func (s *UserService) DeleteToken(ctx context.Context, userID int) error {
+	if err := s.repo.DeleteSession(ctx, userID); err != nil {
+		if errors.Is(err, repository.ErrNoRows) {
+			return ErrUserDoesNotExists
+		}
+		return err
+	}
+
+	return nil
 }
