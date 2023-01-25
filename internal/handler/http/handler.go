@@ -21,6 +21,9 @@ func (h *Handler) InitRoutes() *gorr.Router {
 
 	router.POST("/api/user/sign-up", h.SignUp)
 	router.POST("/api/user/sign-in", h.SignIn)
+	router.GET("/api/user/:user_id", h.GetUser)
+	router.GET("/api/user/:user_id/posts", h.GetUserPosts)
+	router.GET("/api/user/:user_id/liked-posts", h.GetUserVotedPosts)
 
 	return router
 }
