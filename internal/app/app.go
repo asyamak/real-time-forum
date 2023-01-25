@@ -25,7 +25,7 @@ func New() *App {
 	}
 }
 
-func (a *App) Start(configPath *string, databaseName string) {
+func (a *App) Start(configPath *string) {
 	cfg, err := config.NewConfig(*configPath)
 	if err != nil {
 		a.log.Error(err.Error())

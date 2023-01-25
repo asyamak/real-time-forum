@@ -10,5 +10,5 @@ func main() {
 	flag.Parse()
 
 	app := app.New()
-	app.Start(configPath, "sqlite")
+	app.Start(configPath)
 }
