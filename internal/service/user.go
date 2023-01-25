@@ -19,7 +19,7 @@ type User interface {
 	GetByID(ctx context.Context, userID int) (model.User, error)
 	GetUsersPosts(ctx context.Context, userID int) ([]model.Post, error)
 	GetUsersVotedPosts(ctx context.Context, userID int) ([]model.Post, error)
-	SetToken(ctx context.Context, userID int) error
+	SetToken(ctx context.Context, userID int) (string, error)
 	DeleteToken(ctx context.Context, userID int) error
 }
 
