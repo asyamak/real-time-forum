@@ -213,7 +213,66 @@ func (r *PostRepository) Delete(ctx context.Context, userID int, postID int) err
 }
 
 func (r *PostRepository) GetPostsByCategoryID(ctx context.Context, categoryID int, limit int, offset int) ([]model.Post, error) {
-	panic("not implemented") // TODO: Implement
+	var posts []model.Post
+
+	rows, err := r.db.Query(`
+		SELECT
+			post.id,
+			post.user_id AS author_id,
+			user.first_name AS author_first_name,
+			user.last_name AS author_last_name,
+			post.title,
+			post.creation_time
+		FROM 
+			post
+			LEFT JOIN user ON post.user_id = user.id
+		WHERE
+			post.id IN (
+				SELECT
+					post_id
+				FROM
+					post_category
+				WHERE
+					category_id = $1
+			)
+		GROUP BY
+			post.id
+		ORDER BY 
+			post.id DESC
+		LIMIT
+			$2 OFFSET $3
+		`,
+		categoryID, limit, offset,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		var post model.Post
+		err := rows.Scan(
+			&post.ID,
+			&post.Author.ID,
+			&post.Author.FirstName,
+			&post.Author.LastName,
+			&post.Title,
+			&post.CreationTime,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		post.Categories, err = r.getPostCategories(post.ID)
+		if err != nil {
+			return nil, err
+		}
+
+		posts = append(posts, post)
+	}
+
+	return posts, nil
 }
 
 func (r *PostRepository) LikePost(ctx context.Context, like model.PostVotes) (bool, error) {
