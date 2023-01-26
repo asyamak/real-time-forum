@@ -276,7 +276,66 @@ func (r *PostRepository) GetPostsByCategoryID(ctx context.Context, categoryID in
 }
 
 func (r *PostRepository) LikePost(ctx context.Context, like model.PostVotes) (bool, error) {
-	panic("not implemented") // TODO: Implement
+	var isLiked bool
+
+	tx, err := r.db.Begin()
+	if err != nil {
+		return isLiked, err
+	}
+
+	var oldLike model.PostVotes
+
+	row := tx.QueryRowContext(ctx, `
+		SELECT
+			id, post_id, user_id, vote
+		FROM
+			post_vote
+		WHERE
+			post_id = $1
+		AND
+			user_id = $2
+		`,
+		like.PostID, like.UserID)
+
+	err = row.Scan(&oldLike.ID, &oldLike.PostID, &oldLike.UserID, &oldLike.Vote)
+	if err != nil && err != sql.ErrNoRows {
+		tx.Rollback()
+		return isLiked, err
+	}
+
+	if err == nil {
+		_, err = tx.Exec(`DELETE FROM post_vote WHERE id = $1`, oldLike.ID)
+		if err != nil {
+			tx.Rollback()
+			return isLiked, err
+		}
+	}
+
+	if err == sql.ErrNoRows || like.Vote != oldLike.Vote {
+		_, err = tx.ExecContext(ctx, `
+			INSERT INTO 
+				post_vote (post_id, user_id, vote)
+			VALUES
+				($1, $2, $3)
+			`,
+			like.PostID, like.UserID, like.Vote,
+		)
+		if err != nil {
+			tx.Rollback()
+			if isForeignKeyConstraintError(err) {
+				return isLiked, ErrForeignKeyConstraint
+			}
+			return isLiked, err
+		}
+
+		isLiked = true
+	}
+
+	if err := tx.Commit(); err != nil {
+		return isLiked, err
+	}
+
+	return isLiked, nil
 }
 
 func (r *PostRepository) DislikePost(ctx context.Context, dislike model.PostVotes) (bool, error) {
