@@ -192,7 +192,24 @@ func (r *PostRepository) getPostCategories(postID int) ([]model.Category, error)
 }
 
 func (r *PostRepository) Delete(ctx context.Context, userID int, postID int) error {
-	panic("not implemented") // TODO: Implement
+	res, err := r.db.Exec(`DELETE FROM post WHERE id = $1 AND user_id = $2;`, postID, userID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNoRows
+		}
+		return err
+	}
+
+	n, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+
+	if n == 0 {
+		return ErrNoRows
+	}
+
+	return nil
 }
 
 func (r *PostRepository) GetPostsByCategoryID(ctx context.Context, categoryID int, limit int, offset int) ([]model.Post, error) {
